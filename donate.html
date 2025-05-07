@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donate Blood - Blood Bank</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-red-600 text-white shadow-lg">
+        <div class="container mx-auto px-6 py-3">
+            <div class="flex items-center justify-between">
+                <div class="text-2xl font-bold">Blood Bank</div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="index.html" class="hover:text-red-200">Home</a>
+                    <a href="donate.html" class="hover:text-red-200">Donate Blood</a>
+                    <a href="receive.html" class="hover:text-red-200">Need Blood</a>
+                    <a href="admin.html" class="hover:text-red-200">Admin Login</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Donation Form Section -->
+    <div class="container mx-auto px-6 py-12">
+        <div class="max-w-2xl mx-auto">
+            <h1 id="textdonor" class="text-3xl font-bold text-red-600 mb-8">Blood Donation Form</h1>
+            
+            <form id="DonorForm" class="bg-white shadow-md rounded-lg p-8">
+                <!-- Personal Information -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">Personal Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-gray-700 mb-2">Full Name</label>
+                            <input id="donorName" type="text" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-red-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 mb-2">Date of Birth</label>
+                            <input id="donorBirthDate" type="date" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-red-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 mb-2">Gender</label>
+                            <select id="donorGender" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-red-500" required>
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 mb-2">Blood Group</label>
+                            <select id="donorBloodGroup" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-red-500" required>
+                                <option value="">Select Blood Group</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">Contact Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-gray-700 mb-2">Phone Number</label>
+                            <input id="donorPhoneNum" type="tel" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-red-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 mb-2">Email</label>
+                            <input id="donorEmail" type="email" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-red-500" required>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-700 mb-2">Address</label>
+                            <textarea id="donorAdress" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-red-500" rows="3" required></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Health Information -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">Health Information</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-gray-700 mb-2">Weight (kg)</label>
+                            <input id="donorWeight" type="number" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-red-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 mb-2">Last Donation Date (if any)</label>
+                            <input id="lastDonationDate" type="date" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-red-500">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-gray-700">Medical Conditions</label>
+                            <div class="space-y-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2" name="policies">
+                                    <span>I have no medical conditions</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2" name="policies">
+                                    <span>I have not taken any medications in the last 48 hours</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2" name="policies">
+                                    <span>I have not had any major surgery in the last 6 months</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="text-center">
+                    <button type="submit" class="bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 transition duration-300">
+                        Submit Donation Form
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Registered Donors Section -->
+    <div class="container mx-auto px-6 py-12">
+        <h2  id="regDonor" class="hdden text-3xl font-bold text-red-600 mb-8">Registered Donors</h2>
+        <div id="donorCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Cards will be rendered here -->
+        </div>
+    </div>
+  <script type="module" src="islogin.js"></script>
+    <script type="module"  src="donor.js"></script>
+</body>
+</html>

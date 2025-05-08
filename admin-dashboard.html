@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Blood Bank</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen">
+        <!-- Navigation -->
+        <nav class="bg-red-600 text-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center space-x-8">
+                        <h1 class="text-xl font-bold">Blood Bank Admin</h1>
+                        <a href="index.html" class="text-white hover:text-gray-200 transition-colors">
+                            Home
+                        </a>
+                    </div>
+                    <div class="flex items-center">
+                        <button onclick="logout()" class="bg-red-700 hover:bg-red-800 px-4 py-2 rounded-md">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold text-gray-800">Total Donors</h3>
+                    <p class="text-3xl font-bold text-red-600" id="totalDonors">0</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold text-gray-800">Active Requests</h3>
+                    <p class="text-3xl font-bold text-red-600" id="activeRequests">0</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold text-gray-800">Available Units</h3>
+                    <p class="text-3xl font-bold text-red-600" id="availableUnits">0</p>
+                </div>
+            </div>
+
+            <!-- Recent Donors -->
+            <div class="bg-white rounded-lg shadow mb-8">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-800">Recent Donors</h2>
+                </div>
+                <div class="p-6">
+                    <div id="recentDonors" class="space-y-4">
+                        <!-- Donors will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Requests -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-800">Recent Blood Requests</h2>
+                </div>
+                <div class="p-6">
+                    <div id="recentRequests" class="space-y-4">
+                        <!-- Requests will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Check admin authentication
+        if (!localStorage.getItem("adminSession")) {
+            window.location.href = "admin.html";
+        }
+
+        // Load dashboard data
+        function loadDashboardData() {
+            // Load donors
+            const donors = JSON.parse(localStorage.getItem("donors")) || [];
+            document.getElementById("totalDonors").textContent = donors.length;
+            
+            // Load recent donors
+            const recentDonors = donors.slice(-5).reverse();
+            document.getElementById("recentDonors").innerHTML = recentDonors.map(donor => `
+                <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                    <div>
+                        <h4 class="font-medium">${donor.name}</h4>
+                        <p class="text-sm text-gray-600">${donor.bloodGroup} • ${donor.phone}</p>
+                    </div>
+                    <span class="text-sm text-gray-500">
+                        ${new Date(donor.registrationDate).toLocaleDateString()}
+                    </span>
+                </div>
+            `).join('') || '<p class="text-gray-500">No donors registered yet.</p>';
+
+            // Load requests
+            const requests = JSON.parse(localStorage.getItem("bloodRequests")) || [];
+            const activeRequests = requests.filter(req => req.status === 'pending');
+            document.getElementById("activeRequests").textContent = activeRequests.length;
+            
+            // Load recent requests
+            const recentRequests = requests.slice(-5).reverse();
+            document.getElementById("recentRequests").innerHTML = recentRequests.map(request => `
+                <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                    <div>
+                        <h4 class="font-medium">${request.patientName}</h4>
+                        <p class="text-sm text-gray-600">
+                            ${request.bloodType} • ${request.units} units • ${request.hospital}
+                        </p>
+                    </div>
+                    <span class="text-sm text-gray-500">
+                        ${new Date(request.requestDate).toLocaleDateString()}
+                    </span>
+                </div>
+            `).join('') || '<p class="text-gray-500">No blood requests yet.</p>';
+
+            // Calculate available units
+            const availableUnits = donors.reduce((total, donor) => {
+                if (!donor.lastDonationDate || 
+                    (new Date() - new Date(donor.lastDonationDate)) / (1000 * 60 * 60 * 24 * 30) >= 3) {
+                    return total + 1;
+                }
+                return total;
+            }, 0);
+            document.getElementById("availableUnits").textContent = availableUnits;
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem("adminSession");
+            window.location.href = "admin.html";
+        }
+
+        // Load data when page loads
+        document.addEventListener("DOMContentLoaded", loadDashboardData);
+    </script>
+</body>
+</html> 

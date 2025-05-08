@@ -1,153 +1,270 @@
 import checkLogin from "./islogin.js";   
-document.addEventListener("DOMContentLoaded", () => {
 
+// Dummy blood requests data
+const dummyRequests = [
+  {
+    patientName: "John Smith",
+    bloodType: "A+",
+    units: 2,
+    urgency: "emergency",
+    hospital: "City Hospital",
+    reason: "Emergency surgery required",
+    contactName: "Sarah Smith",
+    contactPhone: "1234567890",
+    status: "pending",
+    requestDate: new Date().toISOString(),
+    requestId: "REQ-123456"
+  },
+  {
+    patientName: "Mary Johnson",
+    bloodType: "O+",
+    units: 3,
+    urgency: "urgent",
+    hospital: "General Hospital",
+    reason: "Cancer treatment",
+    contactName: "David Johnson",
+    contactPhone: "9876543210",
+    status: "pending",
+    requestDate: new Date().toISOString(),
+    requestId: "REQ-789012"
+  }
+];
+
+document.addEventListener("DOMContentLoaded", () => {
   checkLogin();
+  initializeDonorForm();
+  // Hide donor cards section initially
+  const donorCardsSection = document.querySelector('.mt-8');
+  if (donorCardsSection) {
+    donorCardsSection.style.display = 'none';
+  }
+});
   
-    donor(); // Initialize donor logic
-    renderCards(); // Render the cards on page load
-  });
+const initializeDonorForm = () => {
+    const donorForm = document.getElementById("DonorForm");
+  if (!donorForm) return;
+
+  donorForm.addEventListener("submit", handleDonorSubmit);
+};
   
-  const donor = () => {
-    const form = document.getElementById("DonorForm");
-  
-    form.addEventListener("submit", (e) => {
+const handleDonorSubmit = (e) => {
       e.preventDefault();
   
-      // --- Collect Input Values ---
-      const name = document.getElementById("donorName").value;
-      const dob = document.getElementById("donorBirthDate").value;
-      const gender = document.getElementById("donorGender").value;
-      const bloodGroup = document.getElementById("donorBloodGroup").value;
+  const formData = new FormData(e.target);
+  const donorData = {
+    name: formData.get("donorName"),
+    birthDate: formData.get("donorBirthDate"),
+    gender: formData.get("donorGender"),
+    bloodGroup: formData.get("donorBloodGroup"),
+    phone: formData.get("donorPhoneNum"),
+    email: formData.get("donorEmail"),
+    address: formData.get("donorAdress"),
+    weight: formData.get("donorWeight"),
+    lastDonationDate: formData.get("lastDonationDate"),
+    healthConditions: Array.from(formData.getAll("policies"))
+  };
   
-      const phone = document.getElementById("donorPhoneNum").value;
-      const email = document.getElementById("donorEmail").value;
-      const address = document.getElementById("donorAdress").value;
+  const errors = validateDonorData(donorData);
+  if (errors.length > 0) {
+    showAlert(errors.join("\n"), "error");
+    return;
+  }
+
+  const donor = createDonorObject(donorData);
+  saveDonorData(donor);
+  showAlert("Donor registration successful!", "success");
+  e.target.reset();
   
-      const weight = document.getElementById("donorWeight").value;
-      const lastDonation = document.getElementById("lastDonationDate").value;
-  
-      const conditions = [...document.querySelectorAll('input[name="policies"]:checked')]
-        .map(el => el.nextElementSibling.textContent.trim());
-  
-      // --- OOP Classes (Encapsulation & Abstraction) ---
-      class PersonalInformation {
-        constructor(name, dob, gender, bloodGroup) {
-          this.name = name;
-          this.dob = dob;
-          this.gender = gender;
-          this.bloodGroup = bloodGroup;
-        }
+  // Show donor cards section and render cards
+  const donorCardsSection = document.querySelector('.mt-8');
+  if (donorCardsSection) {
+    donorCardsSection.style.display = 'block';
+    renderDonorCards();
+    renderMatchingRequests(donor.bloodGroup);
+  }
+};
+
+const validateDonorData = (data) => {
+  const errors = [];
+
+  // Name validation
+  if (!data.name || data.name.length < 2) {
+    errors.push('Please enter a valid name');
       }
   
-      class ContactInformation {
-        constructor(phone, email, address) {
-          this.phone = phone;
-          this.email = email;
-          this.address = address;
-        }
+  // Age validation (must be 18-65)
+  const age = calculateAge(data.birthDate);
+  if (age < 18 || age > 65) {
+    errors.push('Donor must be between 18 and 65 years old');
+  }
+
+  // Email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(data.email)) {
+    errors.push('Please enter a valid email address');
       }
   
-      class HealthInformation {
-        constructor(weight, lastDonation, medicalConditions) {
-          this.weight = weight;
-          this.lastDonation = lastDonation || "N/A";
-          this.medicalConditions = medicalConditions;
-        }
-      }
-  
-      // --- Base class for polymorphism (Abstraction) ---
-      class User {
-        constructor(personalInfo, contactInfo) {
-          this.personalInfo = personalInfo;
-          this.contactInfo = contactInfo;
+  // Phone validation
+  const phoneRegex = /^[0-9]{10,}$/;
+  if (!phoneRegex.test(data.phone.replace(/[^0-9]/g, ''))) {
+    errors.push('Please enter a valid phone number');
+  }
+
+  // Weight validation (must be at least 50kg)
+  if (parseFloat(data.weight) < 50) {
+    errors.push('Donor must weigh at least 50kg');
         }
   
-        getSummary() {
-          return {
-            Name: this.personalInfo.name,
-            Email: this.contactInfo.email,
-          };
-        }
-      }
+  // Last donation validation
+  if (data.lastDonationDate) {
+    const lastDonationDate = new Date(data.lastDonationDate);
+    const today = new Date();
+    const monthsSinceLastDonation = (today - lastDonationDate) / (1000 * 60 * 60 * 24 * 30);
+    if (monthsSinceLastDonation < 3) {
+      errors.push('Must wait at least 3 months between donations');
+    }
+  }
+
+  return errors;
+};
+
+const calculateAge = (dob) => {
+  const birthDate = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
   
-      // --- Inheritance: Donor extends User ---
-      class Donor extends User {
-        constructor(personalInfo, contactInfo, healthInfo) {
-          super(personalInfo, contactInfo);
-          this.healthInfo = healthInfo;
-        }
-  
-        // Polymorphism: override getSummary
-        getSummary() {
-          return {
-            ...super.getSummary(),
-            Gender: this.personalInfo.gender,
-            BloodGroup: this.personalInfo.bloodGroup,
-            Weight: this.healthInfo.weight,
-            LastDonation: this.healthInfo.lastDonation,
-            Conditions: this.healthInfo.medicalConditions,
-          };
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
         }
   
-        thankYou() {
-          alert(`Thank you, ${this.personalInfo.name}, for submitting your donation form!`);
-        }
-      }
-  
-      // Create instances
-      const personalInfo = new PersonalInformation(name, dob, gender, bloodGroup);
-      const contactInfo = new ContactInformation(phone, email, address);
-      const healthInfo = new HealthInformation(weight, lastDonation, conditions);
-  
-      const donor = new Donor(personalInfo, contactInfo, healthInfo);
-  
-      // --- Save to Local Storage ---
+  return age;
+};
+
+const createDonorObject = (formData) => {
+  return {
+    name: formData.name,
+    birthDate: formData.birthDate,
+    gender: formData.gender,
+    bloodGroup: formData.bloodGroup,
+    phone: formData.phone,
+    email: formData.email,
+    address: formData.address,
+    weight: formData.weight,
+    lastDonationDate: formData.lastDonationDate,
+    healthConditions: formData.healthConditions,
+    registrationDate: new Date().toISOString(),
+    status: 'active'
+  };
+};
+
+const saveDonorData = (donor) => {
       const storedDonors = JSON.parse(localStorage.getItem("donors")) || [];
   
-      if (storedDonors.some(d => d.email === donor.contactInfo.email)) {
-        alert("Donor already registered.");
+  // Check for existing donor
+  const existingDonorIndex = storedDonors.findIndex(d => d.email === donor.email);
+  
+  if (existingDonorIndex !== -1) {
+    // Update existing donor
+    storedDonors[existingDonorIndex] = donor;
       } else {
-        storedDonors.push(donor.getSummary());
+    // Add new donor
+    storedDonors.push(donor);
+  }
+  
         localStorage.setItem("donors", JSON.stringify(storedDonors));
-        donor.thankYou();
-      }
-  
-      form.reset(); // Reset the form
-      renderCards(); // Re-render the donor cards
-    });
+};
+
+const showAlert = (message, type = 'error') => {
+  const alertDiv = document.createElement('div');
+  alertDiv.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg ${
+    type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+  }`;
+  alertDiv.textContent = message;
+  document.body.appendChild(alertDiv);
+  setTimeout(() => alertDiv.remove(), 3000);
   };
   
-  const renderCards = () => {
-    const donorContainer = document.getElementById("donorCards");
-    donorContainer.innerHTML = ""; // Clear existing cards
+const renderDonorCards = () => {
+  const donorCardsContainer = document.getElementById("donorCards");
+  if (!donorCardsContainer) return;
   
-    const storedDonors = JSON.parse(localStorage.getItem("donors")) || [];
+  const donors = JSON.parse(localStorage.getItem("donors")) || [];
   
-    storedDonors.forEach(donor => {
-      const donorCard = document.createElement("div");
-      donorCard.classList.add("bg-white", "shadow-lg", "rounded-lg", "p-6", "mb-6");
+  if (donors.length === 0) {
+    donorCardsContainer.innerHTML = `
+      <div class="col-span-full text-center py-8">
+        <p class="text-gray-600">No donors registered yet.</p>
+      </div>
+    `;
+    return;
+  }
+
+  donorCardsContainer.innerHTML = donors.map(donor => `
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h3 class="text-xl font-semibold text-gray-800 mb-2">${donor.name}</h3>
+      <div class="space-y-2">
+        <p class="text-gray-600"><span class="font-medium">Blood Type:</span> ${donor.bloodGroup}</p>
+        <p class="text-gray-600"><span class="font-medium">Age:</span> ${calculateAge(donor.birthDate)} years</p>
+        <p class="text-gray-600"><span class="font-medium">Contact:</span> ${donor.phone}</p>
+        <p class="text-gray-600"><span class="font-medium">Last Donation:</span> ${donor.lastDonationDate ? new Date(donor.lastDonationDate).toLocaleDateString() : 'Never'}</p>
+        <p class="text-gray-600"><span class="font-medium">Status:</span> ${donor.lastDonationDate ? 'Available' : 'New Donor'}</p>
+      </div>
+    </div>
+  `).join('');
+};
+
+const renderMatchingRequests = (bloodType) => {
+  const requestsContainer = document.createElement('div');
+  requestsContainer.className = 'mt-12';
+  requestsContainer.innerHTML = `
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Matching Blood Requests</h2>
+    <div id="matchingRequests" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  `;
+
+  const donorCardsSection = document.querySelector('.mt-8');
+  if (!donorCardsSection) return;
+
+  // Get all requests (combine stored and dummy)
+  const storedRequests = JSON.parse(localStorage.getItem("bloodRequests")) || [];
+  const allRequests = [...storedRequests, ...dummyRequests];
   
-      donorCard.innerHTML = `
-        <h3 class="text-xl font-semibold text-red-600">${donor.Name}</h3>
-        <p class="text-gray-600"><strong>Date of Birth:</strong> ${donor.Dob}</p>
-        <p class="text-gray-600"><strong>Gender:</strong> ${donor.Gender}</p>
-        <p class="text-gray-600"><strong>Blood Group:</strong> ${donor.BloodGroup}</p>
-        <p class="text-gray-600"><strong>Email:</strong> ${donor.Email}</p>
-        <p class="text-gray-600"><strong>Weight:</strong> ${donor.Weight} kg</p>
-        <p class="text-gray-600"><strong>Last Donation:</strong> ${donor.LastDonation}</p>
-        <p class="text-gray-600"><strong>Conditions:</strong> ${donor.Conditions.join(", ") || "None"}</p>
-      `;
-  
-      const form = document.getElementById("DonorForm").classList.add("hidden");
-      const textDonor=document.getElementById("textdonor").classList.add("hidden")
-    const regText=document.getElementById("regDonor").classList.remove("hidden")
-      donorContainer.appendChild(donorCard);
+  // Filter requests matching the donor's blood type
+  const matchingRequests = allRequests.filter(request => 
+    request.bloodType === bloodType && request.status === 'pending'
+  );
 
-    });
-  };
-  
+  if (matchingRequests.length === 0) {
+    requestsContainer.innerHTML += `
+      <div class="col-span-full text-center py-8">
+        <p class="text-gray-600">No matching blood requests found.</p>
+      </div>
+    `;
+  } else {
+    requestsContainer.innerHTML += matchingRequests.map(request => `
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">${request.patientName}</h3>
+        <div class="space-y-2">
+          <p class="text-gray-600"><span class="font-medium">Blood Type:</span> ${request.bloodType}</p>
+          <p class="text-gray-600"><span class="font-medium">Units Needed:</span> ${request.units}</p>
+          <p class="text-gray-600"><span class="font-medium">Urgency:</span> ${request.urgency}</p>
+          <p class="text-gray-600"><span class="font-medium">Hospital:</span> ${request.hospital}</p>
+          <p class="text-gray-600"><span class="font-medium">Contact:</span> ${request.contactName} (${request.contactPhone})</p>
+          <button onclick="contactRequester('${request.contactPhone}')" 
+            class="mt-4 w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+            Contact Requester
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
 
+  requestsContainer.innerHTML += '</div>';
+  donorCardsSection.appendChild(requestsContainer);
+};
 
-
-
+// Make contactRequester function available globally
+window.contactRequester = (contact) => {
+  showAlert(`Contacting requester at ${contact}...`, 'success');
+};
   

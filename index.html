@@ -3,173 +3,452 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blood Bank - Save Lives</title>
+    <title>Blood Bank Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="bg-gray-50">
     <!-- Navigation -->
-    <nav class="bg-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center gap-2">
-                    <span class="text-2xl font-bold text-red-600">BloodBank</span>
-                </div>
-
-                <div class="hidden md:flex items-center space-x-6" id="navLinks">
-                    <a href="index.html" class="text-gray-700 hover:text-red-600">Home</a>
-                    <a href="donate.html" class="text-gray-700 hover:text-red-600">Donate</a>
-                    <a href="contact.html" class="text-gray-700 hover:text-red-600">Contact</a>
-                    <a href="auth.html" id="authLink" class="text-gray-700 hover:text-red-600">Login</a>
-
-                    <!-- Profile Link (visible only when logged in) -->
-                    <div id="profileLinks" class="hidden flex items-center space-x-4 ml-6">
-                        <div class="flex flex-col text-gray-700">
-                            <span id="profileName" class="font-semibold"></span>
-                            <span id="profileEmail" class="text-sm text-gray-500"></span>
-                        </div>
-                        <button id="logoutBtn" class="text-red-500 hover:text-red-700 text-xs ml-4 px-4 py-2 rounded-md border border-red-500 hover:bg-red-50 transition-all">Logout</button>
+    <nav class="bg-red-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Logo and Main Links -->
+                <div class="flex items-center space-x-8">
+                    <h1 class="text-xl font-bold">Blood Bank</h1>
+                    <div class="hidden md:flex space-x-8">
+                        <a href="donor.html" class="text-white hover:text-gray-200 transition-colors">Donate Blood</a>
+                        <a href="receive.html" class="text-white hover:text-gray-200 transition-colors">Request Blood</a>
                     </div>
                 </div>
-
-                <div class="md:hidden flex items-center">
-                    <button id="toggleButton" class="text-gray-700 focus:outline-none">
+    
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <!-- Profile Section (Shown after login) -->
+                    <div id="profileSection" class="hidden relative">
+                        <button onclick="toggleProfileMenu()" class="flex items-center space-x-3 focus:outline-none">
+                            <div class="w-10 h-10 rounded-full bg-red-700 flex items-center justify-center">
+                                <span class="text-lg font-semibold" id="profileInitial">U</span>
+                            </div>
+                            <div class="text-left">
+                                <p class="text-sm font-medium" id="userName">User Name</p>
+                                <p class="text-xs text-red-200" id="userEmail">user@example.com</p>
+                            </div>
+                            <svg class="w-4 h-4 transition-transform" id="dropdownArrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div id="profileMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden z-50">
+                            <a href="admin.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-user-shield mr-2"></i>Admin Login
+                            </a>
+                            <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                            </button>
+                        </div>
+                    </div>
+    
+                    <!-- Login Section (Shown when not logged in) -->
+                    <div id="loginSection">
+                        <a href="auth.html" class="text-white hover:text-gray-200 transition-colors">Login/Signup</a>
+                    </div>
+                </div>
+    
+                <!-- Mobile Toggle Button -->
+                <div class="flex items-center md:hidden">
+                    <button onclick="toggleMobileMenu()" class="text-white focus:outline-none">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
                 </div>
             </div>
         </div>
-
-        <!-- Mobile Menu -->
-        <div class="md:hidden px-4 pb-4 hidden flex-col space-y-2" id="mobileMenu">
-            <a href="index.html" class="text-gray-700 hover:text-red-600 py-2">Home /</a>
-            <a href="donate.html" class="text-gray-700 hover:text-red-600 py-2"> Donate /</a>
-            <a href="contact.html" class="text-gray-700 hover:text-red-600 py-2"> Contact /</a>
-            <a href="auth.html" id="mobileAuthLink" class="text-gray-700 hover:text-red-600 py-2">Login</a>
-
-            <!-- Mobile Profile Links -->
-            <div id="mobileProfileLinks" class="hidden">
-                <div class="flex flex-col text-gray-700 mb-4">
-                    <span id="mobileProfileName" class="font-semibold"></span>
-                    <span id="mobileProfileEmail" class="text-sm text-gray-500"></span>
+    
+        <!-- Inside #mobileMenu -->
+        <div id="mobileMenu" class="hidden md:hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="donor.html" class="block px-3 py-2 text-white hover:bg-red-700 rounded-md">Donate Blood</a>
+                <a href="receive.html" class="block px-3 py-2 text-white hover:bg-red-700 rounded-md">Request Blood</a>
+    
+                <!-- Mobile Profile (Shown after login) -->
+                <div id="mobileProfileSection" class="hidden">
+                    <div class="px-3 py-2 space-y-1">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full bg-red-700 flex items-center justify-center">
+                                <span class="text-lg font-semibold" id="mobileProfileInitial">U</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium" id="mobileUserName">User Name</p>
+                                <p class="text-xs text-red-200" id="mobileUserEmail">user@example.com</p>
+                            </div>
+                        </div>
+                        <a href="admin.html" class="block px-3 py-2 text-white hover:bg-red-700 rounded-md">
+                            <i class="fas fa-user-shield mr-2"></i>Admin Login
+                        </a>
+                        <button onclick="logout()" class="w-full text-left px-3 py-2 text-white hover:bg-red-700 rounded-md">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                        </button>
+                    </div>
                 </div>
-                <button id="mobileLogoutBtn" class="text-red-500 hover:text-red-700 text-xs px-4 py-2 rounded-md border border-red-500 hover:bg-red-50 transition-all">Logout</button>
+    
+                <!-- Mobile Login (Shown when not logged in) -->
+                <div id="mobileLoginSection">
+                    <a href="auth.html" class="block px-3 py-2 text-white hover:bg-red-700 rounded-md">Login/Signup</a>
+                </div>
             </div>
         </div>
     </nav>
-
     <!-- Hero Section -->
-    <div class="bg-red-50">
-        <div class="container mx-auto px-6 py-16">
-            <div class="flex flex-col md:flex-row items-center">
-                <div class="md:w-1/2">
-                    <h1 class="text-4xl md:text-6xl font-bold text-red-600 mb-4">Donate Blood, Save Lives</h1>
-                    <p class="text-gray-600 text-lg mb-8">Your blood donation can save up to three lives. Join our mission to ensure a stable blood supply for those in need.</p>
-                    <div class="space-x-4">
-                        <a href="donate.html" class="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700">Donate Now</a>
-                        <a href="receive.html" class="bg-white text-red-600 px-6 py-3 rounded-lg border border-red-600 hover:bg-red-50">Need Blood</a>
-                    </div>
-                </div>
-                <div class="md:w-1/2 mt-8 md:mt-0">
-                    <img src="https://th.bing.com/th/id/OIP.wFz0ddTYabJgwIP3RG27tAHaFj?rs=1&pid=ImgDetMain" alt="Blood Donation" class="rounded-lg shadow-xl">
+    <div class="pt-24 bg-gradient-to-b from-red-50 to-white">
+        <div class="container mx-auto px-4 py-20">
+            <div class="text-center max-w-4xl mx-auto">
+                <h1 class="text-5xl font-bold text-gray-800 mb-6 hero-title">Welcome to Blood Bank Management System</h1>
+                <p class="text-xl text-gray-600 mb-10 hero-subtitle">Your contribution can save lives. Join us in this noble cause.</p>
+                <div class="space-x-6 hero-buttons">
+                    <a href="donor.html" class="bg-red-600 text-white px-8 py-4 rounded-lg hover:bg-red-700 transform hover:scale-105 transition duration-300 inline-flex items-center">
+                        <i class="fas fa-hand-holding-medical mr-2"></i>
+                        Donate Blood
+                    </a>
+                    <a href="receive.html" class="bg-white text-red-600 px-8 py-4 rounded-lg border-2 border-red-600 hover:bg-red-50 transform hover:scale-105 transition duration-300 inline-flex items-center">
+                        <i class="fas fa-tint mr-2"></i>
+                        Request Blood
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Features Section -->
-    <div class="container mx-auto px-6 py-16">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <div class="text-red-600 text-4xl mb-4">🩸</div>
-                <h3 class="text-xl font-semibold mb-2">Easy Donation</h3>
-                <p class="text-gray-600">Simple and quick process to donate blood. Your contribution matters.</p>
+    <div class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center text-gray-800 mb-16 feature-title">Why Donate Blood?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 feature-cards">
+                <div class="text-center p-8 rounded-xl bg-white shadow-xl transform hover:scale-105 transition duration-300">
+                    <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-heart text-3xl text-red-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-4">Save Lives</h3>
+                    <p class="text-gray-600">Your blood donation can save up to three lives. Every drop counts in the fight to save lives. Blood is needed for surgeries, cancer treatment, chronic illnesses, and traumatic injuries.</p>
+                </div>
+                <div class="text-center p-8 rounded-xl bg-white shadow-xl transform hover:scale-105 transition duration-300">
+                    <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-clock text-3xl text-red-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-4">Regular Need</h3>
+                    <p class="text-gray-600">Blood is needed every two seconds worldwide. Your regular donations help maintain a stable supply. One donation can help multiple patients in need of different blood components.</p>
+                </div>
+                <div class="text-center p-8 rounded-xl bg-white shadow-xl transform hover:scale-105 transition duration-300">
+                    <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-shield-alt text-3xl text-red-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-4">Safe Process</h3>
+                    <p class="text-gray-600">Donating blood is safe and takes only about an hour. Our professional staff ensures your comfort. We use sterile, disposable equipment for each donation to prevent any risk of infection.</p>
+                </div>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <div class="text-red-600 text-4xl mb-4">🏥</div>
-                <h3 class="text-xl font-semibold mb-2">24/7 Availability</h3>
-                <p class="text-gray-600">Round-the-clock blood bank services for emergency situations.</p>
+            <div class="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8 additional-features">
+                <div class="bg-red-50 p-8 rounded-xl">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Health Benefits</h3>
+                    <ul class="space-y-3 text-gray-600">
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-red-600 mr-2"></i>
+                            Reduces iron levels in blood
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-red-600 mr-2"></i>
+                            Stimulates blood cell production
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-red-600 mr-2"></i>
+                            Free health checkup included
+                        </li>
+                    </ul>
+                </div>
+                <div class="bg-red-50 p-8 rounded-xl">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Donation Process</h3>
+                    <ul class="space-y-3 text-gray-600">
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-red-600 mr-2"></i>
+                            Quick registration and screening
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-red-600 mr-2"></i>
+                            Comfortable donation experience
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-red-600 mr-2"></i>
+                            Refreshments provided after donation
+                        </li>
+                    </ul>
+                </div>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <div class="text-red-600 text-4xl mb-4">❤️</div>
-                <h3 class="text-xl font-semibold mb-2">Save Lives</h3>
-                <p class="text-gray-600">Every donation can save up to three lives. Be a hero today.</p>
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <div class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto text-center">
+                <h2 class="text-4xl font-bold text-gray-800 mb-8 about-title">About Our Blood Bank</h2>
+                <p class="text-xl text-gray-600 mb-12 about-content">
+                    We are dedicated to providing a reliable and efficient blood donation system. Our platform connects donors with those in need, ensuring that blood is available when and where it's needed most. With a focus on safety, accessibility, and community service, we strive to make blood donation a seamless and impactful experience.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 stats-cards">
+                    <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <h3 class="text-4xl font-bold text-red-600 mb-2">1000+</h3>
+                        <p class="text-gray-600">Donors Registered</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <h3 class="text-4xl font-bold text-red-600 mb-2">500+</h3>
+                        <p class="text-gray-600">Lives Saved</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <h3 class="text-4xl font-bold text-red-600 mb-2">24/7</h3>
+                        <p class="text-gray-600">Emergency Support</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works Section -->
+    <div class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center text-gray-800 mb-16 process-title">How It Works</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 process-steps">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-red-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">1</div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Register</h3>
+                    <p class="text-gray-600">Create your account and complete your profile</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-red-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">2</div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Donate</h3>
+                    <p class="text-gray-600">Schedule and complete your blood donation</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-red-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">3</div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Track</h3>
+                    <p class="text-gray-600">Monitor your donation history and impact</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-red-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">4</div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Save Lives</h3>
+                    <p class="text-gray-600">Your donation helps those in critical need</p>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-white">
-        <div class="container mx-auto px-6 py-8">
-            <div class="flex flex-col md:flex-row justify-between">
-                <div class="mb-4 md:mb-0">
-                    <h3 class="text-xl font-bold">Blood Bank</h3>
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Blood Bank</h3>
                     <p class="text-gray-400">Saving lives through blood donation</p>
                 </div>
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-8">
                     <div>
-                        <h4 class="text-lg font-semibold mb-2">Quick Links</h4>
+                    <h3 class="text-xl font-bold mb-4">Quick Links</h3>
                         <ul class="space-y-2">
-                            <li><a href="donate.html" class="text-gray-400 hover:text-white">Donate Blood</a></li>
-                            <li><a href="receive.html" class="text-gray-400 hover:text-white">Need Blood</a></li>
+                        <li><a href="donor.html" class="text-gray-400 hover:text-white">Donate Blood</a></li>
+                        <li><a href="receive.html" class="text-gray-400 hover:text-white">Request Blood</a></li>
                             <li><a href="admin.html" class="text-gray-400 hover:text-white">Admin Login</a></li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="text-lg font-semibold mb-2">Contact</h4>
+                    <h3 class="text-xl font-bold mb-4">Contact</h3>
                         <ul class="space-y-2 text-gray-400">
-                            <li>Emergency: 123-456-7890</li>
-                            <li>Email: info@bloodbank.com</li>
-                            <li>Address: 123 Health Street</li>
+                        <li><i class="fas fa-phone mr-2"></i> +1 234 567 890</li>
+                        <li><i class="fas fa-envelope mr-2"></i> info@bloodbank.com</li>
+                        <li><i class="fas fa-map-marker-alt mr-2"></i> 123 Health Street</li>
                         </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Follow Us</h3>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin-in"></i></a>
                     </div>
                 </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 Blood Bank Management System. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
     <script>
-        const toggleButton = document.getElementById('toggleButton');
-        const mobileMenu = document.getElementById('mobileMenu');
-        const profileLinks = document.getElementById('profileLinks');
-        const mobileProfileLinks = document.getElementById('mobileProfileLinks');
-        const authLink = document.getElementById('authLink');
+        // Initialize GSAP
+        gsap.registerPlugin(ScrollTrigger);
 
-        toggleButton.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
+        // Hero section animations
+        gsap.from('.hero-title', {
+            duration: 1,
+            y: 50,
+            opacity: 0,
+            ease: 'power3.out'
         });
 
-        // Check if user is logged in
+        gsap.from('.hero-subtitle', {
+            duration: 1,
+            y: 30,
+            opacity: 0,
+            delay: 0.3,
+            ease: 'power3.out'
+        });
+
+        gsap.from('.hero-buttons', {
+            duration: 1,
+            y: 30,
+            opacity: 0,
+            delay: 0.6,
+            ease: 'power3.out'
+        });
+
+        // Features section animations
+
+        // ScrollTrigger for the title
+gsap.from('.feature-title', {
+    scrollTrigger: {
+        trigger: '.feature-title',
+        start: 'top 80%',  // You can adjust this to 'top 70%' or another value to trigger earlier
+        end: 'bottom top', // Optional: this can be adjusted to set the end of the scroll trigger
+        scrub: true,       // Optional: makes the animation scrub with the scroll
+    },
+    duration: 1,
+    y: 30,
+    opacity: 0,
+    ease: 'power3.out'
+});
+
+// ScrollTrigger for individual cards inside .feature-cards
+gsap.from('.feature-cards > div', {
+    scrollTrigger: {
+        trigger: '.feature-cards',
+        start: 'top 80%',
+        end: 'bottom top',  // Optional: adjust the end of the scroll trigger
+        scrub: true,         // Optional: makes the animation scrub with the scroll
+    },
+    duration: 0.8,
+    y: 50,
+    opacity: 0,
+    stagger: 0.2,
+    ease: 'power3.out'
+});
+
+    // About section animations
+        gsap.from('.about-title', {
+            scrollTrigger: {
+                trigger: '.about-title',
+                start: 'top 80%'
+            },
+            duration: 1,
+            y: 30,
+            opacity: 0,
+            ease: 'power3.out'
+        });
+
+        gsap.from('.about-content', {
+            scrollTrigger: {
+                trigger: '.about-content',
+                start: 'top 80%'
+            },
+            duration: 1,
+            y: 30,
+            opacity: 0,
+            delay: 0.3,
+            ease: 'power3.out'
+        });
+
+        gsap.from('.stats-cards > div', {
+            scrollTrigger: {
+                trigger: '.stats-cards',
+                start: 'top 80%'
+            },
+            duration: 0.8,
+            y: 30,
+            opacity: 0,
+            stagger: 0.2,
+            ease: 'power3.out'
+        });
+
+        // Process section animations
+        gsap.from('.process-title', {
+            scrollTrigger: {
+                trigger: '.process-title',
+                start: 'top 80%'
+            },
+            duration: 1,
+            y: 30,
+            opacity: 0,
+            ease: 'power3.out'
+        });
+
+        gsap.from('.process-steps > div', {
+            scrollTrigger: {
+                trigger: '.process-steps',
+                start: 'top 80%'
+            },
+            duration: 0.8,
+            y: 30,
+            opacity: 0,
+            stagger: 0.2,
+            ease: 'power3.out'
+        });
+
+        // Toggle mobile menu
+   // Dummy function for logout
+   function logout() {
+        localStorage.removeItem("user");
+        location.reload();
+    }
+
+    // Toggle dropdown profile menu
+    function toggleProfileMenu() {
+        document.getElementById("profileMenu").classList.toggle("hidden");
+        document.getElementById("dropdownArrow").classList.toggle("rotate-180");
+    }
+
+    // Toggle mobile menu
+    function toggleMobileMenu() {
+        const mobileMenu = document.getElementById("mobileMenu");
+        mobileMenu.classList.toggle("hidden");
+    }
+
+    // Populate user data if logged in
+    document.addEventListener("DOMContentLoaded", () => {
         const user = JSON.parse(localStorage.getItem("user"));
-        if (user?.loggedIn) {
-            // Show profile links in the main navbar
-            profileLinks.classList.remove('hidden');
-            document.getElementById('profileName').innerText = user.userName;
-            document.getElementById('profileEmail').innerText = user.email;
 
-            // Show profile links in the mobile menu
-            mobileProfileLinks.classList.remove('hidden');
-            document.getElementById('mobileProfileName').innerText = user.userName;
-            document.getElementById('mobileProfileEmail').innerText = user.email;
+        const profileSection = document.getElementById("profileSection");
+        const loginSection = document.getElementById("loginSection");
 
-            // Add logout functionality
-            document.getElementById("logoutBtn").addEventListener("click", () => {
-                user.loggedIn = false;
-                localStorage.setItem("user", JSON.stringify(user));
-                window.location.href = "auth.html";
-            });
+        const mobileProfile = document.getElementById("mobileProfileSection");
+        const mobileLogin = document.getElementById("mobileLoginSection");
 
-            document.getElementById("mobileLogoutBtn").addEventListener("click", () => {
-                user.loggedIn = false;
-                localStorage.setItem("user", JSON.stringify(user));
-                window.location.href = "auth.html";
-            });
+        if (user) {
+            // Show desktop profile
+            profileSection.classList.remove("hidden");
+            loginSection.classList.add("hidden");
+
+            document.getElementById("profileInitial").textContent = user.name?.[0]?.toUpperCase() || "U";
+            document.getElementById("userName").textContent = user.name || "User";
+            document.getElementById("userEmail").textContent = user.email || "example@example.com";
+
+            // Show mobile profile
+            mobileProfile.classList.remove("hidden");
+            mobileLogin.classList.add("hidden");
+
+            document.getElementById("mobileProfileInitial").textContent = user.name?.[0]?.toUpperCase() || "U";
+            document.getElementById("mobileUserName").textContent = user.name || "User";
+            document.getElementById("mobileUserEmail").textContent = user.email || "example@example.com";
         }
-   
-</script>
-<script type="module" src="islogin.js"></script>
-<script type="module" src="app.js"></script>
-
+    });
+    </script>
+    <script type="module" src="islogin.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>

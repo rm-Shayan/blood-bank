@@ -1,15 +1,25 @@
+
 const checkLogin = () => {
-    const user = JSON.parse(localStorage.getItem("user")) || {};
-  
-    const isAuthPage = window.location.pathname.endsWith("auth.html");
-    const isRestricted = ["/donate.html", "/admin.html"].includes(window.location.pathname);
-  
-    if (user.loggedIn && isAuthPage) {
+  // Prevent check from running multiple times on same page
+  if (window.__CHECK_LOGIN_RAN__) return;
+  window.__CHECK_LOGIN_RAN__ = true;
+
+  const user = JSON.parse(localStorage.getItem("currentUser"));
+  const isLoginPage = window.location.pathname.includes("auth.html");
+
+  if (user && isLoginPage) {
+    // Logged in but trying to access login.html
+    setTimeout(() => {
       window.location.href = "index.html";
-    } else if (!user.loggedIn && (isRestricted || !isAuthPage)) {
-      window.location.href = "auth.html";
-    }
-  };
-  
-  export default checkLogin;
-  
+    }, 3000); // Optional: 3-second loader delay
+  }
+
+  if (!user && !isLoginPage) {
+    // Not logged in, trying to access protected page
+    window.location.href = "auth.html";
+  }
+
+  // Allow access otherwise
+};
+
+export default checkLogin;

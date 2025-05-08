@@ -1,91 +1,103 @@
-import checkLogin from "./islogin.js";
+import checkLogin from './islogin.js';
+checkLogin(); // Run it when the script loads
 
-document.addEventListener("DOMContentLoaded", () => {
-  checkLogin();
 
-  const $ = (id) => document.getElementById(id);
 
-  const loginTab = $("loginTab");
-  const signupTab = $("signupTab");
-  const loginForm = $("loginForm");
-  const signupForm = $("signupForm");
+// Select elements
+const loginTab = document.getElementById("loginTab");
+const signupTab = document.getElementById("signupTab");
+const loginForm = document.getElementById("loginForm");
+const signupForm = document.getElementById("signupForm");
+const loginFormElement = document.getElementById("loginFormElement");
+const signupFormElement = document.getElementById("signupFormElement");
+const alertContainer = document.getElementById("alertContainer");
 
-  const switchTabs = (isLogin) => {
-    loginForm.classList.toggle("hidden", !isLogin);
-    signupForm.classList.toggle("hidden", isLogin);
-    loginTab.classList.toggle("active-tab", isLogin);
-    signupTab.classList.toggle("active-tab", !isLogin);
-  };
+// Utility: Show alert
+const showAlert = (message, type = "error") => {
+  const div = document.createElement("div");
+  div.className = `bg-${type === "error" ? "red" : "green"}-100 text-${type === "error" ? "red" : "green"}-700 px-4 py-2 rounded shadow`;
+  div.innerText = message;
+  alertContainer.appendChild(div);
+  setTimeout(() => div.remove(), 3000);
+};
 
-  loginTab.addEventListener("click", () => switchTabs(true));
-  signupTab.addEventListener("click", () => switchTabs(false));
+// Utility: Get users from localStorage
+const getUsers = () => JSON.parse(localStorage.getItem("users")) || [];
 
-  const showAlert = (msg) => alert(msg);
+// Utility: Save user to localStorage
+const saveUser = (user) => {
+  const users = getUsers();
+  users.push(user);
+  localStorage.setItem("users", JSON.stringify(users));
+};
 
-  const saveUser = (user) => {
-    localStorage.setItem("user", JSON.stringify(user));
-  };
+// Tab switching logic
+const switchToLogin = () => {
+  loginTab.classList.add("text-red-600", "border-b-2", "border-red-600");
+  loginTab.classList.remove("text-gray-500");
 
-  const getUser = () => JSON.parse(localStorage.getItem("user")) || null;
+  signupTab.classList.remove("text-red-600", "border-b-2", "border-red-600");
+  signupTab.classList.add("text-gray-500");
 
-  loginForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const formData = new FormData(loginForm);
-    const email = formData.get("email").trim();
-    const password = formData.get("password").trim();
+  loginForm.classList.remove("hidden");
+  signupForm.classList.add("hidden");
+};
 
-    if (!email || !password) return showAlert("Please fill in both fields.");
+const switchToSignup = () => {
+  signupTab.classList.add("text-red-600", "border-b-2", "border-red-600");
+  signupTab.classList.remove("text-gray-500");
 
-    const user = getUser();
-    if (user?.email === email && user?.password === password) {
-      saveUser({ ...user, loggedIn: true });
-      showAlert("Login successful!");
-      window.location.href = "index.html";
-    } else {
-      showAlert("Invalid credentials or user not found.");
-    }
-  });
+  loginTab.classList.remove("text-red-600", "border-b-2", "border-red-600");
+  loginTab.classList.add("text-gray-500");
 
-  signupForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-  
-    const formData = new FormData(signupForm);
-    const userName = formData.get("userName")?.trim();
-    const email = formData.get("userEmail")?.trim();
-    const password = formData.get("userPassword")?.trim();
-  
-    if (!userName || !email || !password) {
-      return alert("Please fill in all fields.");
-    }
-  
-    class User {
-      constructor(userName, email, password) {
-        this.userName = userName;
-        this.email = email;
-        this.password = password;
-        this.loggedIn = true;
-      }
-    }
-  
-    const existingUser = JSON.parse(localStorage.getItem("user"));
-  
-    if (existingUser && existingUser.email === email) {
-      return alert("User already exists. Please login.");
-    }
-  
-    const newUser = new User(userName, email, password);
-    localStorage.setItem("user", JSON.stringify(newUser));
-    alert("Signup successful. Please login now.");
-  
-    // Delay tab switch until after alert is dismissed
-    setTimeout(() => {
-      // Switch to Login tab
-      document.getElementById("loginTab").classList.add("active-tab");
-      document.getElementById("signupTab").classList.remove("active-tab");
-  
-      document.getElementById("signupForm").classList.add("hidden");
-      document.getElementById("loginForm").classList.remove("hidden");
-    }, 100); // Slight delay to let alert finish
-  });
-  
+  signupForm.classList.remove("hidden");
+  loginForm.classList.add("hidden");
+};
+
+loginTab.addEventListener("click", switchToLogin);
+signupTab.addEventListener("click", switchToSignup);
+
+// Login form submit handler
+loginFormElement?.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const email = document.getElementById("loginEmail").value.trim().toLowerCase();
+  const password = document.getElementById("loginPassword").value.trim();
+
+  const user = getUsers().find((u) => u.email === email && u.password === password);
+
+  if (user) {
+    const isLoggedIn=true;
+    localStorage.setItem("isLoggedIn", JSON.stringify(isLoggedIn));
+    localStorage.setItem("currentUser", JSON.stringify(user));
+   
+    showAlert("Login successful!", "success");
+    setTimeout(() => window.location.href = "index.html", 1000); // Redirect after success
+  } else {
+    showAlert("Invalid email or password.", "error");
+  }
 });
+
+
+// Signup form submit handler
+signupFormElement?.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const name = document.getElementById("signupName").value.trim();
+  const email = document.getElementById("signupEmail").value.trim().toLowerCase();
+  const password = document.getElementById("signupPassword").value.trim();
+
+  const users = getUsers();
+  const exists = users.some((user) => user.email === email);
+
+  if (exists) {
+    showAlert("Email already exists. Please log in.", "error");
+    return;
+  }
+
+  saveUser({ name, email, password });
+  showAlert("Signup successful! You can now log in.", "success");
+  signupFormElement.reset();
+  switchToLogin(); // Auto switch to login
+});
+
+// Default: Show login tab
+switchToLogin();
